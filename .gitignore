@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 # specific stuff
+.DS_Store
 data/JPEGImages
 models/ssd_mobilenet_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03/
 
