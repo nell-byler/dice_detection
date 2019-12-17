@@ -1,2 +1,2 @@
-# dice_detection
+# dice_detection [WIP]
 Project to detect and classify six-sided dice from images, mobile devices, and video.
