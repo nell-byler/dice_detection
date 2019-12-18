@@ -12,8 +12,8 @@ After seeing some of the [super cool results](https://medium.com/tensorflow/trai
 2. [Object detection using own dataset](README.md#object-detection)
    - [Generating a labeled dataset and model](README.md##dataset-and-model)
    - [Running on a local machine with GPU](README.md##local-machine)
-   - [Running on AWS EC2 GPU with docker container](README.md##AWS)
    - [Running on GCS AI Platform with TPU](README.md##GCS)
+   - [Running on AWS EC2 GPU with docker container](README.md##AWS)
 3. [Extension to mobile devices with TFLite](README.md#TFlite)
 4. [Extension to video applications](README.md#video-footage)
 
