@@ -5,6 +5,8 @@ I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watch
 
 After seeing some of the [super cool results](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193) for real-time object detection and classification, I thought a dice detector and classifier for streamed games was a natural extension. Eventually, I want a dice detector and classifier that also post-processes a few statistics (the total sum of all visible dice faces, the number of 1s, number of 2s...etc.) which could be output to the screen in a more visible manner...but that will come later.
 
+![output](/img/out_IMG_20191209_095447.jpg)
+
 ## Table of Contents
 1. [Proof-of-Concept: image classification with CNN](README.md#proof-of-concept)
 2. [Object detection using own dataset](README.md#object-detection)
