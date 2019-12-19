@@ -5,8 +5,7 @@ I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watch
 
 After seeing some of the super cool [results](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193) for real-time object detection and classification, a dice detector and classifier for streamed games seemed like a natural extension of the application. Eventually, I would like a system that can also post-processes a few statistics (e.g., the total sum of all visible dice faces, the number of 1s, number of 2s) to output to the screen in a more visible manner...*but first, a working dice detection model!*
 
-<img src="https://raw.githubusercontent.com/nell-byler/dice_detection/master/img/Screenshot_20191219_094842.jpg" width="320">
-
+![phone img](/img/Screenshot_20191219_094842.jpg)
 ![phone gif](/img/giphy.gif)
 
 ## Table of Contents
@@ -352,7 +351,8 @@ six
 ```
 5. Clean and rebuild the project in Android Studio: Menu > Build > Clean Project; and Menu > Build > Rebuild Project.
 6. Run on your device! *Weeeee!*
-<img src="https://raw.githubusercontent.com/nell-byler/dice_detection/master/img/Screenshot_20191219_095010.jpg" width="320">
+
+![android](/img/Screenshot_20191219_095010.jpg)
 
 # Video footage
 
