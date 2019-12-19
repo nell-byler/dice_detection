@@ -3,9 +3,11 @@
 
 I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watching live-streamed tournament games on Twitch. A decent streaming setup for 40k usually includes two top-down cameras: one for viewing the entire table, and one aimed at a dice tray. Many aspects of the game are determined by dice rolls, and each player will roll many dice at a time in the shared dice tray. The use of a dice camera significantly improves the viewing experience (*"Exciting! Player 1 rolled a 12-inch charge!"*), but screen real estate is expensive and the dice camera is often relegated to a small section of the overall view, which can make it difficult to see the results of any given roll.
 
-After seeing some of the [super cool results](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193) for real-time object detection and classification, a dice detector and classifier for streamed games seems like a natural extension of the application. Eventually, I would like a system that can also post-processes a few statistics (e.g., the total sum of all visible dice faces, the number of 1s, number of 2s) to output to the screen in a more visible manner...*but first, a working dice detection model!*
+After seeing some of the super cool [results](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193) for real-time object detection and classification, a dice detector and classifier for streamed games seemed like a natural extension of the application. Eventually, I would like a system that can also post-processes a few statistics (e.g., the total sum of all visible dice faces, the number of 1s, number of 2s) to output to the screen in a more visible manner...*but first, a working dice detection model!*
 
-![example model results](/img/out_IMG_20191209_095447.jpg)
+<img src="https://raw.githubusercontent.com/nell-byler/dice_detection/master/img/Screenshot_20191219_094842.jpg" width="320">
+
+![phone gif](/img/giphy.gif)
 
 ## Table of Contents
 1. [Proof-of-Concept: image classification with CNN](README.md#proof-of-concept)
@@ -178,6 +180,8 @@ python object_detection/model_main.py \
 
 ### Visualizing the results of trained model
 Check out the results of the trained model in [3_visualize_trained_model_output.ipynb](3_visualize_trained_model_output.ipynb)!
+
+![example model results](/img/out_IMG_20191209_095447.jpg)
 
 ## GCS
 To run the model on Google Cloud Services AI platform, I closely followed [this tutorial](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193). The first half of the tutorial (Google Cloud Setup, installing tensorflow, object detection, uploading dataset to GCS) was very straightforward. I was able to follow it word for word on both my linux machine and my macbook pro, so I won't reproduce that text here. *Note - if this is your first time using GCS, make sure you take advantage of the $400 credit for new users!*
