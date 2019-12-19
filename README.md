@@ -21,6 +21,7 @@ After seeing some of the super cool [results](https://medium.com/tensorflow/trai
 
 # Proof of Concept
 There was one existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too long! You can look at the results in [0_dice-classification.ipynb](1_data_relabel_train_test_split.ipynb). The CNN architecture was heavily inspired by LeNet-5, and took about 2 hours to run on my macbook.
+![dice classification](/img/image_classification.png)
 
 # Object Detection
 Image classification is a relatively straight forward concept, but object detection and localization is a much more complex problem. This part of the project was significantly more involved than the initial proof-of-concept, and required that I generate and label my own dataset. I followed EdjeElectronic's [very comprehensive tutorial](https://github.com/EdjeElectronics/TensorFlow-Object-Detection-API-Tutorial-Train-Multiple-Objects-Windows-10#8-use-your-newly-trained-object-detection-classifier), with a few modifications. I briefly outline the steps below.
