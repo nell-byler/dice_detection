@@ -20,12 +20,12 @@ After seeing some of the super cool [results](https://medium.com/tensorflow/trai
 4. [Extension to video applications](README.md#video-footage)
 
 # Proof of Concept
-There was one existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too long! You can look at the results in [0_dice_classification.ipynb](0_dice_classification.ipynb). The CNN architecture was heavily inspired by LeNet-5, and took about 2 hours to run on my macbook.
+There was [one](https://www.kaggle.com/ucffool/dice-d4-d6-d8-d10-d12-d20-images) existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single, six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too long! You can look at the results in [0_dice_classification.ipynb](0_dice_classification.ipynb). The CNN architecture was inspired by LeNet-5, a CNN designed to classify handwritten characters. Run on my macbook, optimization took about 20 minutes, reaching a final loss of 0.02.
 
 ![dice classification](/img/image_classification.png)
 
 # Object Detection
-Image classification is a relatively straight forward concept, but object detection and localization is a much more complex problem. This part of the project was significantly more involved than the initial proof-of-concept, and required that I generate and label my own dataset. I followed EdjeElectronic's [very comprehensive tutorial](https://github.com/EdjeElectronics/TensorFlow-Object-Detection-API-Tutorial-Train-Multiple-Objects-Windows-10#8-use-your-newly-trained-object-detection-classifier), with a few modifications. I briefly outline the steps below.
+While image *classification* is a relatively straight forward concept, object detection is a much more complex problem - given an image with multiple dice (e.g., our dice cam situation), the model must now *detect* and *localize* each die before classification. This part of the project was significantly more involved than the initial proof-of-concept, and required that I generate and label my own dataset. I followed EdjeElectronic's [very comprehensive tutorial](https://github.com/EdjeElectronics/TensorFlow-Object-Detection-API-Tutorial-Train-Multiple-Objects-Windows-10#8-use-your-newly-trained-object-detection-classifier), with a few modifications. I briefly outline the steps below.
 
 ## Dataset and Model
 ### Process overview
