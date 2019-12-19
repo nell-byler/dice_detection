@@ -343,6 +343,6 @@ six
 ```
 5. Menu > Build > Clean Project; Menu > Build > Rebuild Project.
 6. Run on device! *Voila!*
-
+<img src="https://raw.githubusercontent.com/nell-byler/dice_detection/master/img/Screenshot_20191219_095010.jpg" width="320">
 
 # Video footage
