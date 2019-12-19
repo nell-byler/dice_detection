@@ -199,8 +199,8 @@ gcloud ai-platform jobs submit training dice_object_detection_`date +%s` \
 ```
 
 ### A few model benchmarks
-- The `ssd_mobilenet_v1_fpn` model (batch size of 64, image size of 640x640, and 25K steps) took about 2.5 hours to run and reached a final loss of 0.04. It cost $11.
-- The `ssd_mobilenet_v1_quantized` model (batch size of 32, image size of 640x640, 50k steps) took about X hours to run and reached a final loss of 0.0XX. It cost $XX.
+- The `ssd_mobilenet_v1_fpn` model (batch size of 64, image size of 640x640, and 25K steps) took about 3 hours to run and reached a final loss of 0.04. It cost $11.
+- The `ssd_mobilenet_v1_quantized` model (batch size of 32, image size of 640x640, 50k steps) took about 3 hours to run and reached a final loss of 0.1. It cost $16.
 
 ## AWS
 Create a base instance in AWS with a small instance type for a clean ubuntu 18.04 operating system. You'll want to start with a small instance so you can build complexity on an ultra-cheap machine, and then port it over to a larger instance.
@@ -217,5 +217,128 @@ sudo docker push <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
 ```
 
 # TFLite
+This portion of the project follows the tensorflow object detection tutorial [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tensorflowlite.md). The tutorial is fairly brief, and I found this to be the most fiddly part of the project by far, so I will go through my steps in a bit more detail.
+
+1. Download Android Studio and get example program working [*30min*]
+2. Building TF from source [*3hrs for compilation + 1hr*]
+3. Export trained model for mobile device [*1hr*]
+
+## Download Android Studio and test example program
+This part is pretty straight-forward. Clone the examples repository to your machine (`$TF_EXAMPLES`):
+```
+git clone https://github.com/tensorflow/examples.git
+```
+Make sure your android device is set up with developer tools and USB debugging ([check here](https://developer.android.com/studio/debug/dev-options)). Connect your phone to your computer sometime before actually running the project on Android Studio.
+
+Download and install Android Studio ([here](https://developer.android.com/studio/index.html)). This should also install the SDK tools, build-tools, and platfoorm-tools, which you can check under the menu's `tools > SDK manager` after launching.
+
+Within Android Studio, open the example project (`$TF_EXAMPLES/lite/examples/object_detection/android`). When I did this, it automatically started building the project (which required downloading a plug-in or two). After the project has successfully built, make sure your phone is recognized as a device, and run the project. If your phone screen is unlocked, a "TensorFlowLite" app will pop up and you can start detecting/classifying objects around you.
+
+## Building TensorFlow from source
+Following TensorFlow's install from source [guide](https://www.tensorflow.org/install/source). This part was very time-consuming, and I ultimately went for a bare bones installation, ignoring the existance of my GPU card entirely to simplify the process.
+
+Per the instructions, you might need to install a few python packages via pip, but I did not and went directly to the next step - downloading tensorflow from source.
+
+Download tensorflow from source, and checkout your desired release:
+```
+git clone https://github.com/tensorflow/tensorflow.git
+cd tensorflow
+git checkout r1.14
+```
+
+For TF v1.14, you need a bazel version between `0.24.1` and `0.25.2` (I had to google around a bit to figure this out). TF uses a very old version of bazel, so you won't be able to install bazel with apt-get and will have to manually install your specific release from their [repository](https://github.com/bazelbuild/bazel/releases). I went with bazel version `0.25.1`, which I downloaded and installed in `~/bin` (which is already in my `$PATH`).
+
+```
+cd ~/bin
+chmod +x bazel-<version>-installer-linux-x86_64.sh
+./bazel-0.25.0-installer-linux-x86_64.sh --user
+```
+
+Next you need to configure bazel build of tensorflow. From `path/to/tensorflow/`:
+```
+./configure
+```
+I used the default response (mostly "N") for each step. Double check that the script has found the version of python you want to use.
+
+Build the pip package. If `gcc --version` is greater than 5, you'll need to include the additional flag at the end:
+```
+bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0"
+```
+
+Build the package:
+```
+./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+```
+
+Install the package (takes 3+ hours):
+```
+pip install /tmp/tensorflow_pkg/tensorflow-version-tags.whl
+```
+
+## Exporting model for mobile device
+Following the original TF [tutorial](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tensorflowlite.md) again.
+
+Assuming you have a trained model with quantized outputs, set the following environment variables:
+```
+export CONFIG_FILE=/path/to/model/train/pipeline.config
+export CHECKPOINT_PATH=/path/to/model/train/model.ckpt-50000
+export OUTPUT_DIR=/tmp/tflite
+```
+
+From `models/research/`:
+```
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+
+python object_detection/export_tflite_ssd_graph.py \
+--pipeline_config_path=$CONFIG_FILE \
+--trained_checkpoint_prefix=$CHECKPOINT_PATH \
+--output_directory=$OUTPUT_DIR \
+--add_postprocessing_op=true
+```
+
+This should make 2 files in `/tmp/tflite`. From `path/to/tensorflow/`:
+```
+bazel run --config=opt tensorflow/lite/toco:toco -- \
+--input_file=$OUTPUT_DIR/tflite_graph.pb \
+--output_file=$OUTPUT_DIR/detect.tflite \
+--input_shapes=1,640,640,3 \
+--input_arrays=normalized_input_image_tensor \
+--output_arrays='TFLite_Detection_PostProcess','TFLite_Detection_PostProcess:1','TFLite_Detection_PostProcess:2','TFLite_Detection_PostProcess:3' \
+--inference_type=QUANTIZED_UINT8 \
+--mean_values=128 \
+--std_values=128 \
+--change_concat_input_ranges=false \
+--allow_custom_ops
+```
+Your `/tmp/tflite` directory should now contain three files: `detect.tflite`,  `tflite_graph.pb`, and `tflite_graph.pbtxt`.
+
+## Creating and running your new model
+1. copy your `detect.tflite` file to the example android project:
+```
+cp /tmp/tflite/detect.tflite \
+  $TF_EXAMPLES/lite/examples/object_detection/android/app/src/main/assets
+```
+2. Create a new labelmap file in `$TF_EXAMPLES/lite/examples/object_detection/android/app/src/main/assets/labelmap.txt`
+```
+???
+one
+two
+three
+four
+five
+six
+```
+3. Comment out the line (near L40) in `android/app/build.gradle` that uses downloaded files:
+```
+//apply from:'download_model.gradle'
+```
+4. Modify the size of input images in `DetectorActivity.java`, near L53. I did this in Android Studio, but the file is located in `android/app/src/main/java/org/tensorflow/lite/examples/detection/DetectorActivity.java`.
+```
+  private static final int TF_OD_API_INPUT_SIZE = 640;
+```
+5. Menu > Build > Clean Project; Menu > Build > Rebuild Project.
+6. Run on device! *Voila!*
+
 
 # Video footage
