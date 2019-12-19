@@ -6,6 +6,7 @@ I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watch
 After seeing some of the super cool [results](https://medium.com/tensorflow/training-and-serving-a-realtime-mobile-object-detector-in-30-minutes-with-cloud-tpus-b78971cf1193) for real-time object detection and classification, a dice detector and classifier for streamed games seemed like a natural extension of the application. Eventually, I would like a system that can also post-processes a few statistics (e.g., the total sum of all visible dice faces, the number of 1s, number of 2s) to output to the screen in a more visible manner...*but first, a working dice detection model!*
 
 ![phone img](/img/Screenshot_20191219_094842.jpg)
+
 ![phone gif](/img/giphy.gif)
 
 ## Table of Contents
@@ -185,6 +186,7 @@ python object_detection/model_main.py \
 Check out the results of the trained model in [3_visualize_trained_model_output.ipynb](3_visualize_trained_model_output.ipynb)!
 
 ![example model results](/img/out_IMG_20191209_095447.jpg)
+
 *Not bad at all! After looking through several images, I did find a few mysterious mis-labels, but mostly confined to difficult cases - oblique viewing angles, or dice with difficult/low-contrast colors (e.g., red pips on transluscent blue/black plastic). It'd be worthwhile to go back and add some more training images with oblique viewing angles. Eventually.*
 
 ## GCS
