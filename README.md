@@ -21,6 +21,7 @@ After seeing some of the super cool [results](https://medium.com/tensorflow/trai
 
 # Proof of Concept
 There was one existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too long! You can look at the results in [0_dice-classification.ipynb](1_data_relabel_train_test_split.ipynb). The CNN architecture was heavily inspired by LeNet-5, and took about 2 hours to run on my macbook.
+
 ![dice classification](/img/image_classification.png)
 
 # Object Detection
