@@ -20,7 +20,7 @@ After seeing some of the super cool [results](https://medium.com/tensorflow/trai
 4. [Extension to video applications](README.md#video-footage)
 
 # Proof of Concept
-There was [one](https://www.kaggle.com/ucffool/dice-d4-d6-d8-d10-d12-d20-images) existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single, six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too long! You can look at the results in [0_dice_classification.ipynb](0_dice_classification.ipynb). The CNN architecture was inspired by LeNet-5, a CNN designed to classify handwritten characters. Run on my macbook, optimization took about 20 minutes, reaching a final loss of 0.02.
+There was [one](https://www.kaggle.com/ucffool/dice-d4-d6-d8-d10-d12-d20-images) existing dataset on kaggle with dice images. I wanted to train a Convolutional Neural Network (CNN) to classify images of single, six-sided dice as either 1, 2, 3, 4, 5, or 6, and I was curious how difficult it would be to implement and train classifier from scratch. Turns out, not too hard! You can look at the results in [0_dice_classification.ipynb](0_dice_classification.ipynb). The CNN architecture was inspired by LeNet-5, a CNN designed to classify handwritten characters. Run on my macbook, optimization took about 20 minutes, reaching a final loss of 0.02.
 
 ![dice classification](/img/image_classification.png)
 
@@ -234,7 +234,7 @@ To use AWS EC2 to train your model, you'll need an AWS account. For a peronal ac
 9. Click "launch instance"
 
 ### Upload tensorflow docker image to ECR
-Make an Elastic Container Repository (ECR) account. We will push the tensorflow docker image from your local machine to the ECR, so that it can be pulled down by future AWS images.
+Make an Elastic Container Repository (ECR) account, and create a repository `ml-dice`. We will push the tensorflow docker image from your local machine to the ECR, so that it can be pulled down by future AWS images.
 
 Here we will use the docker image we [previously set up](README.md###creating-a-container-image-prepared-for-object-detection).
 
@@ -242,8 +242,8 @@ Here we will use the docker image we [previously set up](README.md###creating-a-
 pip install awscli --upgrade
 sudo $(aws ecr get-login --no-include-email --region us-west-2)
 sudo docker image list
-sudo docker tag <something> <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
-sudo docker push <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
+sudo docker tag <image_ID> <account_id>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
+sudo docker push <account_id>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
 ```
 
 ### Configure AWS image
@@ -256,7 +256,7 @@ sudo docker push <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
 4. Install AWS CLI following the AWS [documentation](https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html).
    - You don't need to add keys, because AWS CLI will just use the machine's IAM role.
 5. Install HAProxy to forward jupyter and tensorboard so we don't need to install a desktop GUI, following these [instructions](https://geraldalinio.com/security/haproxy/install-haproxy-2-0-on-ec2-ubuntu-18-04/).
-   - In `/etc/haproxy/haproxy.config`, use the config in [haproxy.config](/docs/haproxy.config).
+   - In `/etc/haproxy/haproxy.config`, use the config in [haproxy.config](/img/haproxy.config).
 6. Install python your favorite way (or follow this [guide](https://fluiddyn.readthedocs.io/en/latest/setup_ubuntu1804.html))
    - For [pyenv](https://github.com/pyenv/pyenv-installer), do `apt build-dep python3.6`, then install via pyenv.
 7. Create docker volume (`docker volume create d6`)
@@ -271,13 +271,13 @@ sudo docker push <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
      - `sudo mv dice_detection $DOCKER_VOL/`
 10. Pull your tensorflow docker image to the AWS image
    - `sudo $(aws ecr get-login --no-include-email --region us-west-2)`
-   - `sudo docker pull <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest`
+   - `sudo docker pull <account_id>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest`
 
 *Note: running `nvidia-smi` to test installation on the `t2.micro` will not work!*
 
 To start a container:
 ```
-docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
+docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <account_id>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
 ```
 
 You can launch jupyter notebook the same way (`jupyter notebook --ip 0.0.0.0 --no-browser --allow-root`), and copy-paste the link into a browser, but replace the generic IP with `instance_public_IP`.
@@ -292,7 +292,7 @@ You can launch jupyter notebook the same way (`jupyter notebook --ip 0.0.0.0 --n
 From the "AMI" link on the left menu, click on your newest image and launch in `p3.2xlarge` type instance. Note the `instance_public_IP` and SSH into the machine.
 
 ```
-docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
+docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <account_id>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
 cd /d6/models/research
 export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 python object_detection/builders/model_builder_test.py
@@ -314,7 +314,7 @@ sudo docker container list
 sudo docker exec -it <container_ID> /bin/bash
 ```
 
-For the smallest GPU instance (`p3.2xlarge`, 16 GB GPU memory) and the TPU-optimized quantized model, I could only use `batch_size=8` before running out of memory. Sizing up to the `p3.8xlarge` (64 GB of GPU memory) would be more comparable to the GCS TPU instances above, which have the equivalent of 64 GB of TPU memory.
+For the smallest GPU instance (`p3.2xlarge`, 16 GB GPU memory) and the TPU-optimized quantized model, I could only use `batch_size=8` before running out of memory. Sizing up to the `p3.8xlarge` (64 GB of GPU memory) would be more comparable to the GCS TPU instances used in the previous section, which have the equivalent of 64 GB of TPU memory.
 
 # TFLite
 ### Deploying your trained model to a mobile device!
