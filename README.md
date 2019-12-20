@@ -1,4 +1,4 @@
-# Real-time dice detection and classification [WIP]
+# Real-time dice detection and classification
 **Project Goal**: Detect and classify six-sided dice from images, mobile devices, and video.
 
 I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watching live-streamed tournament games on Twitch. A decent streaming setup for 40k usually includes two top-down cameras: one for viewing the entire table, and one aimed at a dice tray. Many aspects of the game are determined by dice rolls, and each player will roll many dice at a time in the shared dice tray. The use of a dice camera significantly improves the viewing experience (*"Exciting! Player 1 rolled a 12-inch charge!"*), but screen real estate is expensive and the dice camera is often relegated to a small section of the overall view, which can make it difficult to see the results of any given roll.
@@ -211,16 +211,32 @@ gcloud ai-platform jobs submit training dice_object_detection_`date +%s` \
 ```
 
 ### A few model benchmarks
-- The `ssd_mobilenet_v1_fpn` model (`batch_size=64`, image size of 640x640, and 25K training steps) took about 3 hours to run and reached a final loss of 0.04. It cost $11.
-- The `ssd_mobilenet_v1_quantized` model (`batch_size=32`, image size of 640x640, 50k training steps) took about 3 hours to run and reached a final loss of 0.1. It cost $16.
+- The `ssd_mobilenet_v1_fpn` model (`batch_size=64`, image size of 640x640, and 25K training steps) took about 3 hours to run and reached a final loss of 0.04. It cost about $15.
+- The `ssd_mobilenet_v1_quantized` model (`batch_size=32`, image size of 640x640, 50k training steps) took about 3 hours to run and reached a final loss of 0.1. It cost about $30.
 
 ## AWS
------ **_SECTION IN PROGRESS!_** -----
+To use AWS EC2 to train your model, you'll need an AWS account. For a peronal account, the instance type allocation is initially restricted, so if you want to use GPU instances (e.g., `p3.2xlarge`), you will need to open a support ticket to increase your instance type allocation.
 
-Create a base instance in AWS with a small instance type for a clean ubuntu 18.04 operating system. You'll want to start with a small instance so you can build complexity on an ultra-cheap machine, and then port it over to a larger instance.
+### Configure EC2 instance
+1. Launch a new instance
+2. Select desired Amazon Machine Image (AMI) - Ubuntu Server 18.04.
+3. Choose instance type
+   - Start with a small instance type (`t2.micro`), so you can build complexity on an ultra-cheap machine, and then port it over to the larger, more expensive machine.
+4. Configure instance details
+   - Create an IAM role with admin privileges.
+   - Everything else is probably OK at the default settings.
+5. Add storage (magnetic is cheaper, 100GB is fine)
+6. Add tags if you'd like
+7. Create new security group
+   - Type: all traffic
+   - Source: My IP
+8. Create SSH key, `your_ssh_key.pem`, and put it in `~/.ssh/`
+9. Click "launch instance"
 
-### Upload docker image to ECR repository
-We will use the docker image we [previously set up](README.md###creating-a-container-image-prepared-for-object-detection).
+### Upload tensorflow docker image to ECR
+Make an Elastic Container Repository (ECR) account. We will push the tensorflow docker image from your local machine to the ECR, so that it can be pulled down by future AWS images.
+
+Here we will use the docker image we [previously set up](README.md###creating-a-container-image-prepared-for-object-detection).
 
 ```
 pip install awscli --upgrade
@@ -229,6 +245,76 @@ sudo docker image list
 sudo docker tag <something> <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
 sudo docker push <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest
 ```
+
+### Configure AWS image
+1. SSH into your `t2.micro` machine
+   - From the "instance" page, click on your running instance to display details. 
+   - Copy the IPv4 Public IP address, `instance_public_IP`.
+   - `ssh -i ~/.ssh/your_ssh_key.pem ubuntu@instance_public_IP`
+2. Run apt update, apt upgrade
+3. Follow the tensorflow docker install [guide](https://www.tensorflow.org/install/docker) to install NVIDIA drivers, docker 19.03, and nvidia-docker runtime (including `cuda-drivers` and `nvidia-container-toolkit`).
+4. Install AWS CLI following the AWS [documentation](https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html).
+   - You don't need to add keys, because AWS CLI will just use the machine's IAM role.
+5. Install HAProxy to forward jupyter and tensorboard so we don't need to install a desktop GUI, following these [instructions](https://geraldalinio.com/security/haproxy/install-haproxy-2-0-on-ec2-ubuntu-18-04/).
+   - In `/etc/haproxy/haproxy.config`, use the config in [haproxy.config](/docs/haproxy.config).
+6. Install python your favorite way (or follow this [guide](https://fluiddyn.readthedocs.io/en/latest/setup_ubuntu1804.html))
+   - For [pyenv](https://github.com/pyenv/pyenv-installer), do `apt build-dep python3.6`, then install via pyenv.
+7. Create docker volume (`docker volume create d6`)
+   - `$DOCKER_VOL` for reference (`export DOCKER_VOL=/var/lib/docker/volumes/d6/_data`)
+8. Get tensorflow/models and cocoapi
+   - `sudo git clone https://github.com/tensorflow/models.git $DOCKER_VOL/`
+   - `sudo git clone https://github.com/cocodataset/cocoapi.git $DOCKER_VOL/`
+9. Get relevant data onto machine
+   - I did `sudo git clone https://github.com/nell-byler/dice_detection.git $DOCKER_VOL/`
+   - SCP works just as well
+     - `scp -r -i ~/.ssh/your_ssh_key.pem path/to/dir/ ubuntu@instance_public_IP:~/`
+     - `sudo mv dice_detection $DOCKER_VOL/`
+10. Pull your tensorflow docker image to the AWS image
+   - `sudo $(aws ecr get-login --no-include-email --region us-west-2)`
+   - `sudo docker pull <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest`
+
+*Note: running `nvidia-smi` to test installation on the `t2.micro` will not work!*
+
+To start a container:
+```
+docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
+```
+
+You can launch jupyter notebook the same way (`jupyter notebook --ip 0.0.0.0 --no-browser --allow-root`), and copy-paste the link into a browser, but replace the generic IP with `instance_public_IP`.
+
+**Save AWS Image**
+- Close connection via SSH
+- From the "instances" page, right-click on the instance, and click image > create image.
+- Click on the AMI link in the left menu to check that the image has started building before shutting down your current instance
+- From the "instances" page, right-click on the instance, and click state > terminate.
+
+**Launch AWS image on GPU machine**
+From the "AMI" link on the left menu, click on your newest image and launch in `p3.2xlarge` type instance. Note the `instance_public_IP` and SSH into the machine.
+
+```
+docker run -it --gpus all -p 8889:8888 -p 6007:6006 --mount source=d6,target=/d6 <something>.dkr.ecr.us-west-2.amazonaws.com/ml-dice:latest bash
+cd /d6/models/research
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+python object_detection/builders/model_builder_test.py
+```
+
+Assuming your `pipeline.config` file is correctly configured:
+```
+python object_detection/model_main.py \
+--pipeline_config_path=/d6/dice_detection/models/ssd_mobilenet_v1_quantized_300x300_coco14_sync_2018_07_18/pipeline.config \
+--model_dir=/d6/dice_detection/models/ssd_mobilenet_v1_quantized_300x300_coco14_sync_2018_07_18/train \
+--alsologtostderr \
+—num_train_steps=50000
+```
+
+To launch tensorboard, from a new terminal window:
+```
+ssh -i ~/.ssh/your_ssh_key.pem ubuntu@instance_public_IP
+sudo docker container list
+sudo docker exec -it <container_ID> /bin/bash
+```
+
+For the smallest GPU instance (`p3.2xlarge`, 16 GB GPU memory) and the TPU-optimized quantized model, I could only use `batch_size=8` before running out of memory. Sizing up to the `p3.8xlarge` (64 GB of GPU memory) would be more comparable to the GCS TPU instances above, which have the equivalent of 64 GB of TPU memory.
 
 # TFLite
 ### Deploying your trained model to a mobile device!
