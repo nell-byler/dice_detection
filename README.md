@@ -1,5 +1,5 @@
 # Real-time dice detection and classification
-**Project Goal**: Detect and classify six-sided dice from images, mobile devices, and video.
+**Project Goal**: Use deep learning to detect and classify six-sided dice from images, mobile devices, and (eventually) video.
 
 I play a lot of Warhammer 40k, a dice-based tabletop board game, and enjoy watching live-streamed tournament games on Twitch. A decent streaming setup for 40k usually includes two top-down cameras: one for viewing the entire table, and one aimed at a dice tray. Many aspects of the game are determined by dice rolls, and each player will roll many dice at a time in the shared dice tray. The use of a dice camera significantly improves the viewing experience (*"Exciting! Player 1 rolled a 12-inch charge!"*), but screen real estate is expensive and the dice camera is often relegated to a small section of the overall view, which can make it difficult to see the results of any given roll.
 
