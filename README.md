@@ -1,3 +1,5 @@
+[My dice dataset is now available on kaggle!](https://www.kaggle.com/nellbyler/d6-dice)
+
 # Real-time dice detection and classification
 **Project Goal**: Use deep learning to detect and classify six-sided dice from images, mobile devices, and (eventually) video.
 
